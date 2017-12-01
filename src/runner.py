@@ -1,6 +1,6 @@
 import socket
 import sys
-import StringIO
+from io import StringIO
 
 addressFamily = socket.AF_INET
 socketType = socket.SOCK_STREAM
