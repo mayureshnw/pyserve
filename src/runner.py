@@ -130,7 +130,10 @@ def run(application):
     while True:
         print(">> in while True")
         connection, address = socketListener.accept()
-        handleSingleRequest(connection, application)
+        try:
+            handleSingleRequest(connection, application)
+        finally:
+            connection.close()
 
 
 def set_wsgi(cgiVariables):
