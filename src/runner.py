@@ -24,17 +24,13 @@ def init(host, port):
 
 
 def requestParse(req):
-    req = str(req)
-    req = req.splitlines()[0]
-    print(req, "\n>>>>>>\n")
-    req = req.rstrip('\\r\\n')
-    print(req, "\n>>>>>>\n")
-    reqparams = req.split("\\r\\n")
-    for param in reqparams:
-        print(param)
-
-    print("=========================================\n\n")
-    # print(request_method, path, request_version)
+    req = req.decode('UTF-8').splitlines()[0]
+    req = req.rstrip('\r\n')
+    reqlist = req.split()
+    # Break down the request line into components
+    return {'request_method': reqlist[0],
+            'path': reqlist[1],
+            'request_version': reqlist[2]}
 
 
 def generateResponse(parsedReq):
@@ -47,7 +43,13 @@ Hello, World!
 
 def handleSingleRequest(connection):
     req = connection.recv(CLIENT_DATA_BUFFER_SIZE)
-    requestParse(req)
+    reqDetails = requestParse(req)
+
+    # add raw request data to details
+    reqDetails['request_data'] = req.decode('UTF-8')
+
+    # reqDetails contains data for cgi variables
+    set_wsgi(reqDetails)
     res = generateResponse(req)
     connection.sendall(bytes(res, 'UTF-8'))
     connection.close()
@@ -60,15 +62,21 @@ def run():
         handleSingleRequest(connection)
 
 
-def set_wsgi():
+def set_wsgi(cgiVariables):
     wsgiconfig = {}
     wsgiconfig['wsgi.version'] = (1, 0)  # works but why ?
     wsgiconfig['wsgi.url_scheme'] = 'http'
     wsgiconfig['wsgi.multithread'] = False
     wsgiconfig['wsgi.multiprocess'] = False
     wsgiconfig['wsgi.run_once'] = False
-    wsgiconfig['wsgi.input'] = StringIO.StringIO(self.request_data)
+    wsgiconfig['wsgi.input'] = StringIO(cgiVariables['request_data'])
     wsgiconfig['wsgi.errors'] = sys.stderr
+
+    # CGI VARIABLES
+    wsgiconfig['REQUEST_METHOD'] = cgiVariables['request_method']  # GET
+    wsgiconfig['PATH_INFO'] = cgiVariables['path']  # /hello
+    wsgiconfig['SERVER_NAME'] = socket.getfqdn(HOST)  # localhost
+    wsgiconfig['SERVER_PORT'] = PORT
 
     return wsgiconfig
 
@@ -83,4 +91,7 @@ def main(sysargs):
     location, app = path.split(":")
     # importing the application
     imported_application = __import__(location)
-    print(imported_application)
+    app = getattr(imported_application, app)
+    print(app)
+
+    run()
