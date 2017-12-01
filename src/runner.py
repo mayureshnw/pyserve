@@ -1,4 +1,6 @@
 import socket
+import sys
+import StringIO
 
 addressFamily = socket.AF_INET
 socketType = socket.SOCK_STREAM
@@ -56,6 +58,19 @@ def run():
     while True:
         connection, address = socketListener.accept()
         handleSingleRequest(connection)
+
+
+def set_wsgi():
+    wsgiconfig = {}
+    wsgiconfig['wsgi.version'] = (1, 0)  # works but why ?
+    wsgiconfig['wsgi.url_scheme'] = 'http'
+    wsgiconfig['wsgi.multithread'] = False
+    wsgiconfig['wsgi.multiprocess'] = False
+    wsgiconfig['wsgi.run_once'] = False
+    wsgiconfig['wsgi.input'] = StringIO.StringIO(self.request_data)
+    wsgiconfig['wsgi.errors'] = sys.stderr
+
+    return wsgiconfig
 
 
 def main(sysargs):
