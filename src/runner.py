@@ -22,7 +22,17 @@ def init(host, port):
 
 
 def requestParse(req):
-    print(req)
+    req = str(req)
+    req = req.splitlines()[0]
+    print(req, "\n>>>>>>\n")
+    req = req.rstrip('\\r\\n')
+    print(req, "\n>>>>>>\n")
+    reqparams = req.split("\\r\\n")
+    for param in reqparams:
+        print(param)
+
+    print("=========================================\n\n")
+    # print(request_method, path, request_version)
 
 
 def generateResponse(parsedReq):
@@ -48,4 +58,14 @@ def run():
         handleSingleRequest(connection)
 
 
-run()
+def main(sysargs):
+    if len(sysargs) < 2:
+        print(
+            "Expected application callable \nTry \n>> python3 server.py application:app")
+        return
+
+    path = sysargs[1]
+    location, app = path.split(":")
+    # importing the application
+    imported_application = __import__(location)
+    print(imported_application)
