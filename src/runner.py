@@ -2,12 +2,13 @@ import socket
 import sys
 from io import StringIO
 from .statuscodes import getStatusDefinition
+from multiprocessing import Process
 
 addressFamily = socket.AF_INET
 socketType = socket.SOCK_STREAM
 queueSize = 1
 HOST = ''
-PORT = 8080
+PORT = 8081
 CLIENT_DATA_BUFFER_SIZE = 1024
 
 
@@ -78,10 +79,6 @@ def start_response(status, response_headers, exec_info=None):
     # Following HTTP Spec https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html
 
     # status line format ==> Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
-    # if status == None:
-    #     status = 500
-    # status_def = getStatusDefinition(status)
-
     # Application sending error informaton as a part of staus
     res_status_line = "HTTP/1.1 {status} \r\n".format(status=status)
     res_headers = preset_headers + response_headers
@@ -113,13 +110,11 @@ def handleSingleRequest(connection, app):
     headers = response._headers
     del headers['content-length']
     response._headers = headers
-    #
-    # res = bytes('', 'UTF-8')
 
     response = generateResponse(
         response.status_code, response.serialize_headers(), response)
 
-    print(response)
+    # print(response)
     connection.sendall(response)
     connection.close()
     print(">> connection closed, exiting handleSingleRequest")
@@ -131,7 +126,11 @@ def run(application):
         print(">> in while True")
         connection, address = socketListener.accept()
         try:
-            handleSingleRequest(connection, application)
+            p = Process(target=handleSingleRequest,
+                        args=(connection, application))
+            p.start()
+            p.join()
+
         finally:
             connection.close()
 
