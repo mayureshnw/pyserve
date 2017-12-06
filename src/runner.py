@@ -6,7 +6,7 @@ from multiprocessing import Process
 
 addressFamily = socket.AF_INET
 socketType = socket.SOCK_STREAM
-queueSize = 1
+queueSize = 100
 HOST = ''
 PORT = 8081
 CLIENT_DATA_BUFFER_SIZE = 1024
@@ -26,12 +26,12 @@ def init(host, port):
 
 
 def requestParse(req):
-    print(">> In requestParse")
+    # print(">> In requestParse")
     req = req.decode('UTF-8').splitlines()[0]
     req = req.rstrip('\r\n')
     reqlist = req.split()
     # Break down the request line into components
-    print(">> before return, exiting requestParse")
+    # print(">> before return, exiting requestParse")
     return {'request_method': reqlist[0],
             'path': reqlist[1],
             'request_version': reqlist[2]}
@@ -90,7 +90,7 @@ def start_response(status, response_headers, exec_info=None):
 
 
 def handleSingleRequest(connection, app):
-    print(">> in handleSingleRequest")
+    # print(">> in handleSingleRequest")
     req = connection.recv(CLIENT_DATA_BUFFER_SIZE)
     reqDetails = requestParse(req)
 
@@ -100,12 +100,12 @@ def handleSingleRequest(connection, app):
     # reqDetails contains data for cgi variables
     env = set_wsgi(reqDetails)
 
-    print(">> calling app callable")
+    # print(">> calling app callable")
     response = app(env, start_response)
-    print()
-    print(response.status_code)
-    print(">> app call success, response recieved")
-    print(">> generating response")
+    # print()
+    # print(response.status_code)
+    # print(">> app call success, response recieved")
+    # print(">> generating response")
 
     headers = response._headers
     del headers['content-length']
@@ -117,13 +117,13 @@ def handleSingleRequest(connection, app):
     # print(response)
     connection.sendall(response)
     connection.close()
-    print(">> connection closed, exiting handleSingleRequest")
+    # print(">> connection closed, exiting handleSingleRequest")
 
 
 def run(application):
     socketListener = init(HOST, PORT)
     while True:
-        print(">> in while True")
+        # print(">> in while True")
         connection, address = socketListener.accept()
         try:
             p = Process(target=handleSingleRequest,
@@ -136,7 +136,7 @@ def run(application):
 
 
 def set_wsgi(cgiVariables):
-    print(">> in set_wsgi")
+    # print(">> in set_wsgi")
     wsgiconfig = {}
     wsgiconfig['wsgi.version'] = (1, 0)  # works but why ?
     wsgiconfig['wsgi.url_scheme'] = 'http'
@@ -153,7 +153,7 @@ def set_wsgi(cgiVariables):
     wsgiconfig['SERVER_NAME'] = '127.0.0.1'
     wsgiconfig['SERVER_PORT'] = PORT
 
-    print(">> exiting set_wsgi")
+    # print(">> exiting set_wsgi")
     return wsgiconfig
 
 
