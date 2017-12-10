@@ -10,3 +10,9 @@ Run Django app by taking teh following steps
 4. run `python3 main.py django_app:app`
 
 djangoapp is a functional django application, you can use the above commend to test it out
+
+
+WARNING:
+multiprocessing `spawn`s a process as opposed to forking making it significantly slower.
+On UNIX machines, however it does fork.
+The benchmark was against the server running on a nix machine
